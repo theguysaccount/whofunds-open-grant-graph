@@ -1,7 +1,7 @@
 // Tell IndexNow search engines (Bing, Yandex, Seznam, Naver...) which URLs exist.
 //
 //   node scripts/indexnow.mjs --file dist-urls.txt          # after a deploy: the first 10,000 (landing pages first)
-//   node scripts/indexnow.mjs --sitemap <site>/sitemap.xml  # daily: the next 10,000 sitemap URLs, one pass per release
+//   node scripts/indexnow.mjs --sitemap <site>/sitemap.xml  # daily: the next 10,000 sitemap URLs, rotating through all of them
 //
 // The key file (<key>.txt) is published at the site root by build-pages.mjs. A failed
 // submission is reported but never fails the workflow: the site itself is already live.
@@ -35,20 +35,29 @@ let urls;
 if (opt("--file")) {
   urls = fs.readFileSync(opt("--file"), "utf8").split("\n").filter(Boolean).slice(0, BATCH);
 } else if (opt("--sitemap")) {
+  // A continuous rotation keyed to the calendar day, not to the release date: releases come
+  // about monthly and a full pass takes ~47 days, so restarting per release would never reach
+  // the end of the list.
   const { urls: all, lastmod } = await sitemapUrls(opt("--sitemap"));
-  const day = Math.floor((Date.now() - Date.parse(lastmod)) / 86400000);
-  const start = day * BATCH;
-  if (start >= all.length) { console.log(`all ${all.length} URLs already submitted for the ${lastmod} release`); process.exit(0); }
-  urls = all.slice(start, start + BATCH);
-  console.log(`release ${lastmod}, day ${day}: URLs ${start}-${start + urls.length} of ${all.length}`);
+  const batches = Math.max(1, Math.ceil(all.length / BATCH));
+  const slot = Math.floor(Date.now() / 86400000) % batches;
+  urls = all.slice(slot * BATCH, slot * BATCH + BATCH);
+  console.log(`release ${lastmod}: batch ${slot + 1} of ${batches}, URLs ${slot * BATCH}-${slot * BATCH + urls.length} of ${all.length}`);
 } else {
   throw new Error("use --file <urls.txt> or --sitemap <sitemap.xml url>");
 }
 
 const host = new URL(base).host;
 const body = { host, key, keyLocation: `${base}/${key}.txt`, urlList: urls.filter((u) => new URL(u).host === host) };
-const res = await fetch("https://api.indexnow.org/indexnow", {
-  method: "POST", headers: { "Content-Type": "application/json; charset=utf-8" }, body: JSON.stringify(body),
-});
-console.log(`IndexNow: ${res.status} ${res.statusText} for ${body.urlList.length} URLs`);
-if (![200, 202].includes(res.status)) console.log((await res.text()).slice(0, 500));
+// A new key answers 403 SiteVerificationNotCompleted until the engine has fetched the key
+// file, so 403, 429 and 5xx are retried a few times before giving up until the next run.
+for (let attempt = 0; attempt < 4; attempt++) {
+  if (attempt) await new Promise((r) => setTimeout(r, 60000 * attempt));
+  const res = await fetch("https://api.indexnow.org/indexnow", {
+    method: "POST", headers: { "Content-Type": "application/json; charset=utf-8" }, body: JSON.stringify(body),
+  });
+  console.log(`IndexNow: ${res.status} ${res.statusText} for ${body.urlList.length} URLs`);
+  if ([200, 202].includes(res.status)) break;
+  console.log((await res.text()).slice(0, 500));
+  if (!(res.status === 403 || res.status === 429 || res.status >= 500)) break;
+}

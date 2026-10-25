@@ -38,7 +38,7 @@ The product's distribution is search. Its pages are titled for the searches fund
 What runs automatically:
 - **Sitemaps.** There are 12 gzipped sitemaps with ~461k URLs, every published entity. Landing pages come first.
 - **Structured data.** `WebSite` + `SearchAction` on home, `NGO` with `funder` on org pages, `Organization` on foundation pages, `Dataset` with `DataDownload` on the data page.
-- **IndexNow** (Bing, Yandex, Seznam, Naver). The landing pages go in after every deploy. Then `indexnow.yml` submits the next 10,000 sitemap URLs each day, finishing a full pass in about 47 days per release. The key file is published at the site root.
+- **IndexNow** (Bing, Yandex, Seznam, Naver). The landing pages go in after every deploy. Then `indexnow.yml` submits the next 10,000 sitemap URLs each day. The rotation follows the calendar, not the release, so it reaches every URL about every 47 days. The key file is published at the site root.
 - **Open data channels.** Each release is a GitHub release with CSV assets and notes, so its download counts are a public, machine-readable usage signal.
 
 ## 4. The first 14 days (automatic)

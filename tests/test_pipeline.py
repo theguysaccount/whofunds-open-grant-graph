@@ -98,6 +98,34 @@ class Individuals(unittest.TestCase):
         self.assertEqual(public_purpose("GENERAL OPERATING SUPPORT"), "GENERAL OPERATING SUPPORT")
 
 
+class FoundationNames(unittest.TestCase):
+    def test_continuation_lines_are_joined(self):
+        f = common.foundation_name
+        self.assertEqual(f("KENNETH AND CHERRIE GARRETT", "FOUNDATION"), "KENNETH AND CHERRIE GARRETT FOUNDATION")
+        self.assertEqual(f("THE NANCY TAYLOR FOUNDATION", "FOR CHRONIC DISEASES INC"),
+                         "THE NANCY TAYLOR FOUNDATION FOR CHRONIC DISEASES INC")
+        self.assertEqual(f("BRIGHT & CHRISTELLA ERICHSON CHARITABLE", "TRUST UA DTD 08/06/79"),
+                         "BRIGHT & CHRISTELLA ERICHSON CHARITABLE TRUST")
+        self.assertEqual(f("THE ELLEN AND JACK KESSLER FAMILY", "FOUNDATION C/O JJ KESSLER"),
+                         "THE ELLEN AND JACK KESSLER FAMILY FOUNDATION")
+
+    def test_contacts_trustees_and_aliases_are_dropped(self):
+        f = common.foundation_name
+        for n1, n2 in (("GIVING FIRSTFRUITS FOUNDATION INC", "C/0 STEPHANIE EDWARDS"),
+                       ("THE GLOVER FAMILY FOUNDATION", "C/O JOHN T GLOVER SR"),
+                       ("ROCK ISLAND REFINING FOUNDATION", "NORMA L WINKLER TRUSTEE"),
+                       ("EDNA MAY AUCKER SCHOLARSHIP TRUST", "FIRST NATIONAL TRUST CO TRUSTEE"),
+                       ("F RACHEL MEMORIAL FOUNDATION", "CO VPIVTORAK"),
+                       ("BOISE GOOD SAMARITAN HOUSING INC", "D/B/A THE COTTAGE"),
+                       ("Silverwing Foundation", "Founded by Jay and Betty Van Andel"),
+                       ("THE MICHAEL & REBECCA CEMO FOUNDATION", "AKA THE CEMO FOUNDATION")):
+            self.assertEqual(f(n1, n2), n1, n2)
+        self.assertEqual(f("FRED C RUMMEL FOUNDATION CO ROBERT COCKREN"), "FRED C RUMMEL FOUNDATION")
+        self.assertEqual(f("ACME FOUNDATION C/O JANE DOE"), "ACME FOUNDATION")
+        self.assertEqual(f("THE KROGER CO FOUNDATION"), "THE KROGER CO FOUNDATION")
+        self.assertEqual(f("JT TAI & CO FOUNDATION INC"), "JT TAI & CO FOUNDATION INC")
+
+
 def bmf_row(ein, name, street, city, state, zip_, rev="0"):
     return {"EIN": ein, "NAME": name, "STREET": street, "CITY": city, "STATE": state, "ZIP": zip_,
             "SUBSECTION": "03", "FOUNDATION": "15", "NTEE_CD": "", "REVENUE_AMT": rev, "INCOME_AMT": rev,

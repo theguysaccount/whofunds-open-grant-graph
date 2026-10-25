@@ -397,6 +397,35 @@ def display_filed_name(raw_name):
     return name if safe_to_display(name) else ""
 
 
+ENTITY_WORD = r"(?:FOUNDATION|FDN|FUND|TRUST|INC|INCORPORATED|CORP|CORPORATION|ASSOCIATION|SOCIETY|ENDOWMENT|INSTITUTE|NFP|LTD|LLC)"
+FDN_CARE_OF = re.compile(r"\s*(?:\bC/[O0]\b|%|\bATTN\b|\bATTENTION\b|\bIN CARE OF\b).*$", re.I)
+FDN_CO_TAIL = re.compile(r"(\b" + ENTITY_WORD + r")\.?,?\s+CO\b.*$", re.I)  # "X FOUNDATION CO JOHN DOE"
+NAME2_SKIP = re.compile(r"^\(?\s*(?:AKA|A/K/A|FKA|F/K/A|NKA|N/K/A|DBA|D/B/A|FORMERLY|FOUNDED BY|SUCCESSOR|C/0|CO|C O|ATTN|ATTENTION|CARE OF)\b")
+NAME2_TRUSTEE = re.compile(r"\b(?:TRUSTEES?|TTEES?|TR|BANK|N\.?\s?A|TRUST CO(?:MPANY)?|WEALTH|ADVISORS?|LLP|CPAS?|ESQ|AGENT|EXECUTORS?|ADMINISTRATORS?|PRIVATE CLIENT|FIDUCIARY|ATTORNEYS?|PLLC|PC)\b")
+NAME2_INSTRUMENT = re.compile(r"\s*\b(?:U/?A/?D?|U/?W|UTA|DTD|DATED)\b.*$")
+NAME2_CONTINUES = re.compile(r"^(?:FOR|OF|AND|&|IN|TO|ON|AT|THE)\b")
+NAME2_ENTITY_ONLY = re.compile(r"^(?:(?:CHARITABLE|FAMILY|MEMORIAL|PRIVATE|SUPPORTING)\s+)*" + ENTITY_WORD + r"(?:\s+(?:INC|INCORPORATED|CORP|LTD|NFP|LLC))?\.?$")
+
+
+def foundation_name(line1, line2=""):
+    """A filer's own name for display. The e-file splits long names across two lines
+    ("THE JOHN AND JANE DOE" / "FAMILY FOUNDATION"), and the lines also carry care-of
+    contacts, trustees, and a.k.a. names. Keeps continuations, drops the rest."""
+    n1 = " ".join((line1 or "").split())
+    n1 = FDN_CO_TAIL.sub(r"\1", FDN_CARE_OF.sub("", n1)).strip(" ,-")
+    n2 = " ".join((line2 or "").split())
+    u1, u2 = ascii_upper(n1), ascii_upper(n2)
+    if not n1 or not n2 or u2 == u1 or NAME2_SKIP.match(u2):
+        return n1
+    n2 = NAME2_INSTRUMENT.sub("", strip_care_of(n2)).strip(" ,-")
+    u2 = ascii_upper(n2)
+    if not n2 or NAME2_TRUSTEE.search(u2) or looks_like_person(n2):
+        return n1
+    if re.search(r"\b" + ENTITY_WORD + r"\.?$", u1) and not (NAME2_CONTINUES.match(u2) or NAME2_ENTITY_ONLY.match(u2)):
+        return n1
+    return f"{n1} {n2}"
+
+
 HONOREE = re.compile(r"\b(IN (?:LOVING )?(?:MEMORY|HONOU?R) OF|HONORING|MEMORIAL FOR|IN MEMORIAM|TRIBUTE TO)\b.*$", re.I)
 
 

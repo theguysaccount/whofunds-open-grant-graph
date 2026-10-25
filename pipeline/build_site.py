@@ -29,7 +29,7 @@ import time
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from common import (  # noqa: E402
     GT_XML_URL, PROPUBLICA_FILING_URL, RAW, RELEASE, ROOT, WORK, display_filed_name, ensure_dir, fmt_ein,
-    money, name_tokens, open_text,
+    foundation_name, money, name_tokens, open_text,
 )
 
 SITE = os.path.join(ROOT, "site")
@@ -302,8 +302,8 @@ def main():
 
     # ---------------- foundation display + co-funders ----------------
     def fdn_name(fe):
-        fil = filers.get(fe)
-        return nice_name((fil or {}).get("name") or disp.get(fe) or (bmf.get(fe) or ("",))[0])
+        fil = filers.get(fe) or {}
+        return nice_name(foundation_name(fil.get("name"), fil.get("name2")) or disp.get(fe) or (bmf.get(fe) or ("",))[0])
 
     def fdn_place(fe):
         fil = filers.get(fe) or {}

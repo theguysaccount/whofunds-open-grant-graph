@@ -3,7 +3,7 @@
 **Works:**
 - Live on GitHub Pages: search, org and foundation pages, prospects and peers, CSV export, share, corrections via issues.
 - The TY2023 graph: 123,403 foundations and 2,017,591 paid grant lines ($122.7B). 61.6% of lines and 51.4% of dollars resolve to an EIN, against 47.4% and 37.8% in v0.1.
-- The CC0 data release, a weekly refresh that fails safe, daily IndexNow submissions, and 22 Python + 11 Node tests.
+- The CC0 data release, a weekly refresh that fails safe, daily IndexNow submissions, and 24 Python + 11 Node tests.
 
 **Origin:** v0.1 existed only as a report page. Its scripts and outputs weren't available, so the pipeline was rebuilt from the public sources, proved on a 3,700-foundation slice (MA), then run nationally.
 
