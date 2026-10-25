@@ -315,10 +315,11 @@ def sim_variant(a, v):
     if a_sq == b_sq:
         sim = 1.0
     else:
-        # Every float sum runs in sorted token order: set order follows the per-process hash
-        # seed, and last-bit rounding must not decide a margin that lands on a threshold.
+        # Float sums use math.fsum (exactly rounded) over sorted tokens: set order follows the
+        # per-process hash seed, and sum() rounds differently across Python versions (3.12 made
+        # it compensated), so last-bit rounding must not decide a margin that lands on a threshold.
         common = a_set & b_set
-        wc = sum(w(t) for t in sorted(common))
+        wc = math.fsum(w(t) for t in sorted(common))
         ra = [t for t in a_toks if t not in common]
         rb = [t for t in b_toks if t not in common]
         used_a, used_b = set(), set()
@@ -341,8 +342,8 @@ def sim_variant(a, v):
                     used_a.add(t)
                     used_b.add(u)
                     break
-        wa = sum(w(t) for t in sorted(a_set)) or 1e-9
-        wb = sum(w(t) for t in sorted(b_set)) or 1e-9
+        wa = math.fsum(w(t) for t in sorted(a_set)) or 1e-9
+        wb = math.fsum(w(t) for t in sorted(b_set)) or 1e-9
         ca, cb = min(1.0, wc / wa), min(1.0, wc / wb)
         sim = 0.0 if ca + cb == 0 else 2 * ca * cb / (ca + cb)
         if len(a_toks) == 1 and 2 <= len(a_toks[0]) <= 6 and a_toks[0] == b_ini:
@@ -512,7 +513,7 @@ def resolve_one(name, z, key, po, city, state):
     margin = final - run[0] if run else final
     if strat in NATIONAL:
         o = orgs[i]
-        distinct = sum(w(t) for t in sorted(a[1]))
+        distinct = math.fsum(w(t) for t in sorted(a[1]))
         if state and state not in US_STATES:
             return ("below_threshold", (top, run, margin))
         if o.state != state and o.rev < NATIONAL_BIG_ORG:

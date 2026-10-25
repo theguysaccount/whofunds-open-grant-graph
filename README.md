@@ -66,7 +66,7 @@ python3 pipeline/build_site.py data/work/run --year 2023
 cd site && npm ci && WHOFUNDS_BASE_URL=http://localhost:8000/whofunds WHOFUNDS_REPO=owner/repo node scripts/build-pages.mjs
 ```
 
-Extraction takes about 15 minutes cold (the XML is cached under `data/raw/xml`). The resolver needs about 5 GB of RAM with `--workers 1`, and more with forked workers. Its output is deterministic: identical across worker counts and Python hash seeds, and tested.
+Extraction takes about 15 minutes cold (the XML is cached under `data/raw/xml`). The resolver needs about 5 GB of RAM with `--workers 1`, and more with forked workers. Its output is deterministic: identical across worker counts, Python hash seeds and Python versions (float sums are exact), and tested. A local build reproduces the CI release line for line.
 
 To prove a change on a slice first, run `python3 pipeline/fetch_index.py 2023 --states MA` (3,700 foundations) and point the next steps at `data/work/pf_index_2023_MA.csv`.
 

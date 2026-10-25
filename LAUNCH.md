@@ -47,7 +47,7 @@ What runs automatically:
 |---|---|---|
 | 0 | Data release published, site deployed, the first 10,000 landing pages submitted to IndexNow | Actions tab all green |
 | 1–14 | `indexnow.yml` submits 10,000 more URLs per day (140k by day 14) | Bing results for `site:theguysaccount.github.io/whofunds-open-grant-graph` |
-| 7, 14 | `refresh.yml` checks the sources; it rebuilds only if the IRS or the data lake changed | New release appears, or "nothing to do" |
+| 7, 14 | `refresh.yml` checks the sources; it rebuilds only if the IRS, the data lake or the pipeline code changed | New release appears, or "nothing to do" |
 | any | Visitors file corrections as `correction` issues | The issues list |
 
 Signals of use that need no analytics account:
