@@ -12,9 +12,12 @@ const SRC_PUB = path.join(SITE_DIR, "public");
 const PUB = process.env.WHOFUNDS_OUT ? path.resolve(process.env.WHOFUNDS_OUT) : SRC_PUB;
 const DATA = path.resolve(process.env.WHOFUNDS_DATA_DIR || path.join(SITE_DIR, "data"));
 process.chdir(SITE_DIR);
-// Asset version = hash of the CSS + JS, written before any page renders so every page
-// (static and server-rendered) references the same cache-busting query.
-const ASSET_V = crypto.createHash("sha1").update(fs.readFileSync(path.join(SRC_PUB, "assets", "app.css"))).update(fs.readFileSync(path.join(SRC_PUB, "assets", "app.js"))).digest("hex").slice(0, 10);
+// Asset version = hash of the CSS, the scripts, the shared templates and the data build,
+// written before any page renders so every page (static and server-rendered) references the
+// same cache-busting query, and shard URLs change with each data release.
+const versioned = [path.join(SRC_PUB, "assets", "app.css"), path.join(SRC_PUB, "assets", "app.js"),
+  path.join(SRC_PUB, "assets", "entity.js"), path.join(SITE_DIR, "lib", "core.js"), path.join(DATA, "stats.json")];
+const ASSET_V = versioned.reduce((h, f) => (fs.existsSync(f) ? h.update(fs.readFileSync(f)) : h), crypto.createHash("sha1")).digest("hex").slice(0, 10);
 fs.writeFileSync(path.join(DATA, "asset-version.txt"), ASSET_V);
 process.env.WHOFUNDS_ASSET_VERSION = ASSET_V;
 const { layout, esc, money, num, pct, fmtEin, orgUrl, fdnUrl, pageUrl, L, searchForm, alertBox, issueUrl, STRATEGY, SITE } = await import("../lib/render.js");
