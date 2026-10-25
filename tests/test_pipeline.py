@@ -125,6 +125,13 @@ class FoundationNames(unittest.TestCase):
         self.assertEqual(f("THE KROGER CO FOUNDATION"), "THE KROGER CO FOUNDATION")
         self.assertEqual(f("JT TAI & CO FOUNDATION INC"), "JT TAI & CO FOUNDATION INC")
 
+    def test_display_casing(self):
+        import build_site as bs
+        self.assertEqual(bs.nice_name("AMAZONSMILE FOUNDATION"), "AmazonSmile Foundation")
+        self.assertEqual(bs.nice_name("GE FOUNDATION"), "GE Foundation")
+        self.assertEqual(bs.nice_name("GEORGE FOUNDATION"), "George Foundation")
+        self.assertEqual(bs.nice_name("THE MCKNIGHT FOUNDATION"), "The McKnight Foundation")
+
 
 def bmf_row(ein, name, street, city, state, zip_, rev="0"):
     return {"EIN": ein, "NAME": name, "STREET": street, "CITY": city, "STATE": state, "ZIP": zip_,

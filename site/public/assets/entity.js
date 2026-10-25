@@ -58,14 +58,17 @@ function rendered() {
 // ---- client-rendered pages: /org/?ein=... and /foundation/?ein=...
 async function renderShell(kind) {
   const root = document.getElementById("entity-root");
-  const ein = String(new URLSearchParams(location.search).get("ein") || "").replace(/[^0-9]/g, "").padStart(9, "0");
+  const raw = String(new URLSearchParams(location.search).get("ein") || "").replace(/[^0-9]/g, "");
+  const ein = raw.padStart(9, "0");
   const k = kind === "org" ? "o" : "f";
-  const x = /^[0-9]{9}$/.test(ein) ? await entry(k, ein) : null;
+  const x = raw && /^[0-9]{9}$/.test(ein) ? await entry(k, ein) : null;
   if (!x) {
-    root.innerHTML = `<h1>Not in the ${C.SITE.year} graph</h1><p class="lede">${kind === "org"
-      ? `No private-foundation grant on a ${C.SITE.year} 990-PF was matched to EIN ${C.esc(C.fmtEin(ein))}.`
-      : `No ${C.SITE.year} Form 990-PF was found for EIN ${C.esc(C.fmtEin(ein))}.`}</p>${C.searchForm("nf", "", true)}`;
-    document.title = "Not found · WHOFUNDS";
+    root.innerHTML = !raw
+      ? `<h1>Find ${kind === "org" ? "an organization" : "a foundation"}</h1><p class="lede">Search by name or EIN.</p>${C.searchForm("nf", "", true)}`
+      : `<h1>Not in the ${C.SITE.year} graph</h1><p class="lede">${kind === "org"
+        ? `No private-foundation grant on a ${C.SITE.year} 990-PF was matched to EIN ${C.esc(C.fmtEin(ein))}.`
+        : `No ${C.SITE.year} Form 990-PF was found for EIN ${C.esc(C.fmtEin(ein))}.`}</p>${C.searchForm("nf", "", true)}`;
+    document.title = raw ? "Not found · WHOFUNDS" : "Search · WHOFUNDS";
     rendered();
     return;
   }

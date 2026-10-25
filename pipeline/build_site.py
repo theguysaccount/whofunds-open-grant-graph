@@ -45,7 +45,10 @@ SMALL = {"OF", "AND", "THE", "FOR", "IN", "AT", "ON", "TO", "A", "AN", "BY", "WI
 ACRONYMS = set("""YMCA YWCA YMHA YWHA NAACP ACLU USA US PTA PTO PTSA PTSO SPCA ASPCA NPR PBS WGBH WBUR WNET KQED WNYC
 MIT UCLA NYU UCSF USC UNC LSU SMU TCU BYU CUNY SUNY AIDS HIV LGBT LGBTQ LGBTQIA STEM VFW NAMI JCC UJA ADL UNICEF
 UNCF CEO NFL NBA MLB NHL NCAA YWCA ALS MS CF ARC AARP KIPP IDEA TED RSVP FIRST UN WWF NRDC EDF IRC CRS HFH HFHI
-II III IV VI VII VIII IX XI NY NYC LA DC SF USO PFLAG GLSEN NARAL IJM ONE CARE AJC JDC HIAS ORT AIPAC JNF ZOA""".split())
+II III IV VI VII VIII IX XI NY NYC LA DC SF USO PFLAG GLSEN NARAL IJM ONE CARE AJC JDC HIAS ORT AIPAC JNF ZOA
+GE IBM UPS CVS PNC HSBC KPMG PWC AIG BMO UBS HP BP ESPN NBC CBS HCA AMD GM BNY TIAA USAA PGA LPGA WNBA MLS""".split())
+MIXED = {"AMAZONSMILE": "AmazonSmile", "JPMORGAN": "JPMorgan", "PAYPAL": "PayPal", "FEDEX": "FedEx",
+         "BLACKROCK": "BlackRock", "PEPSICO": "PepsiCo", "GOFUNDME": "GoFundMe", "YOUTUBE": "YouTube"}
 
 
 def nice_name(s):
@@ -59,7 +62,9 @@ def nice_name(s):
     out = []
     for i, w in enumerate(s.split(" ")):
         core = re.sub(r"[^A-Za-z0-9]", "", w).upper()
-        if core in ACRONYMS or (any(c.isdigit() for c in core) and not re.match(r"^\d+(ST|ND|RD|TH)$", core)):
+        if core in MIXED and core in w.upper():
+            out.append(w.upper().replace(core, MIXED[core]))
+        elif core in ACRONYMS or (any(c.isdigit() for c in core) and not re.match(r"^\d+(ST|ND|RD|TH)$", core)):
             out.append(w.upper())
         elif i > 0 and core in SMALL:
             out.append(w.lower())

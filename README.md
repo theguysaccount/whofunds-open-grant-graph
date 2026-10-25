@@ -1,6 +1,6 @@
 # WHOFUNDS: the open grant graph of US private foundations
 
-**Live:** https://theguysaccount.github.io/whofunds-open-grant-graph/ · **Data (CC0):** [latest release](https://github.com/theguysaccount/whofunds-open-grant-graph/releases/latest)
+**Live:** https://theguysaccount.github.io/whofunds-open-grant-graph/ · **Data (CC0):** [latest release](https://github.com/theguysaccount/whofunds-open-grant-graph/releases/latest) · **Screens:** [desktop and phone](docs/screens/)
 
 Every grant on every Form 990-PF for a tax year, with the recipient's missing EIN recovered from the IRS Business Master File. Form 990-PF lists each grant by payee name and address but has no field for the payee's tax ID, so a foundation grant can't be joined to anything. WHOFUNDS recovers the ID, publishes the graph into the public domain and shows its own miss rate.
 
@@ -76,6 +76,8 @@ To prove a change on a slice first, run `python3 pipeline/fetch_index.py 2023 --
 python3 -m unittest discover -s tests -v   # normalisation, placeholders, individuals, resolver rules, determinism, extractor privacy, release scan
 cd site && npm test                        # rendering, escaping, search, HTTP handlers, correction privacy, share cards
 ```
+
+Screenshots of the key pages at desktop (1280px) and phone (390px) widths: `cd site && node scripts/screens.mjs <site url>` writes `docs/screens/`.
 
 ## Optional settings (repository variables)
 
