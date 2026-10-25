@@ -1,0 +1,85 @@
+# Weekly: check the public sources (IRS BMF, GivingTuesday 990 Data Lake indexes, this
+# pipeline's code). If anything changed, rebuild the grant graph, test it, guard it against
+# the last good release, publish a new data release and redeploy the site.
+# Fails safe: any failed step stops before publishing, and the live site keeps the last release.
+name: Refresh data
+
+on:
+  schedule:
+    - cron: "23 7 * * 1"
+  workflow_dispatch:
+    inputs:
+      force:
+        description: Rebuild even if the sources are unchanged
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+  actions: write
+
+concurrency:
+  group: refresh
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 330
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Previous release
+        run: |
+          mkdir -p prev
+          gh release download --repo "$GITHUB_REPOSITORY" --pattern "sources.json" --pattern "stats.json" --dir prev || echo "no previous release"
+      - name: Check sources
+        id: check
+        run: python3 pipeline/sources.py check prev/sources.json | tee -a "$GITHUB_OUTPUT"
+      - name: Stop when nothing changed
+        if: steps.check.outputs.changed != 'true' && inputs.force != true
+        run: echo "Sources unchanged since the last release; nothing to do."
+      - name: Download inputs
+        if: steps.check.outputs.changed == 'true' || inputs.force == true
+        run: python3 pipeline/sources.py download --year "${{ steps.check.outputs.year }}"
+      - name: Extract grant lines
+        if: steps.check.outputs.changed == 'true' || inputs.force == true
+        run: python3 pipeline/extract_pf_grants.py "data/work/pf_index_${{ steps.check.outputs.year }}.csv" 400000 data/work/run/pf_grants.csv.gz --workers 24
+      - name: Resolve EINs (single process, ~5 GB RAM)
+        if: steps.check.outputs.changed == 'true' || inputs.force == true
+        run: python3 pipeline/resolve_eins.py data/work/run/pf_grants.csv.gz data/work/run/pf_grants_resolved.csv.gz --workers 1
+      - name: Build graph, site data and release files
+        if: steps.check.outputs.changed == 'true' || inputs.force == true
+        run: python3 pipeline/build_site.py data/work/run --year "${{ steps.check.outputs.year }}" --base-url "https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}"
+      - name: Tests (privacy scan of the new release included)
+        if: steps.check.outputs.changed == 'true' || inputs.force == true
+        run: python3 -m unittest discover -s tests -v
+      - name: Guard against a broken rebuild
+        if: steps.check.outputs.changed == 'true' || inputs.force == true
+        run: python3 pipeline/sources.py guard prev/stats.json site/data/stats.json
+      - name: Publish data release
+        if: steps.check.outputs.changed == 'true' || inputs.force == true
+        run: |
+          cp data/work/sources.json site/data/sources.json
+          tar -czf site-data.tar.gz -C site/data .
+          tag="data-$(date -u +%Y%m%d-%H%M)"
+          year="${{ steps.check.outputs.year }}"
+          python3 - <<'PY' > notes.md
+          import json
+          s = json.load(open("site/data/stats.json"))
+          sc = s["scopes"]; L = s["paid_lines"]; D = s["paid_dollars"]
+          print(f"WHOFUNDS grant graph, tax year {s['year']}, built {s['built']} from the GivingTuesday 990 Data Lake and the IRS Business Master File. Public domain (CC0).\n")
+          print(f"- {s['foundations']:,} Form 990-PF returns, {L:,} grant lines paid, ${D/1e9:.1f}B")
+          print(f"- Matched to a recipient EIN: {sc['resolved'][0]:,} lines ({sc['resolved'][0]/L:.1%}), ${sc['resolved'][1]/1e9:.1f}B ({sc['resolved'][1]/D:.1%})")
+          print(f"- {s['orgs']:,} recipient organizations, {s['orgs_multi_funded']:,} funded by two or more foundations")
+          print("- Grants to individuals are counted, never published.")
+          PY
+          gh release create "$tag" --repo "$GITHUB_REPOSITORY" --title "Grant graph TY${year} ($(date -u +%Y-%m-%d))" --notes-file notes.md --latest \
+            data/release/*.csv.gz site-data.tar.gz site/data/stats.json site/data/sources.json
+      - name: Redeploy the site
+        if: steps.check.outputs.changed == 'true' || inputs.force == true
+        run: gh workflow run pages.yml --repo "$GITHUB_REPOSITORY" --ref "${{ github.ref_name }}"

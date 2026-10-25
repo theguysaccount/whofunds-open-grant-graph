@@ -55,7 +55,7 @@ export const fye = (d) => (d && d.length >= 7 ? `FYE ${d.slice(5, 7)}/${d.slice(
 export const fdnUrl = (ein) => L(dir(`/foundation/${ein}`));
 export const pageUrl = (name) => L(name === "" ? "/" : dir(`/${name}`));
 export const issueUrl = (title, body, labels = "correction") =>
-  `https://github.com/${SITE.repo}/issues/new?labels=${encodeURIComponent(labels)}&title=${encodeURIComponent(title)}&body=${encodeURIComponent(body)}`;
+  `https://github.com/${SITE.repo}/issues/new?template=correction.md&labels=${encodeURIComponent(labels)}&title=${encodeURIComponent(title)}&body=${encodeURIComponent(body)}`;
 
 export const STRATEGY = {
   A: ["Same address", "Filed street or PO box and ZIP match the IRS record exactly."],
@@ -373,7 +373,7 @@ export function foundationBody(f, showAll, N, opts = {}) {
       const [oe, amt, purpose, score, margin, code] = x.g;
       const o = N.o(oe);
       const pp = SITE.mode === "static" && purpose && purpose.length > 140 ? purpose.slice(0, 139).trimEnd() + "…" : purpose;
-      return `<tr${more}><td data-label="Recipient"><a href="${N.href("o", oe)}">${esc(o[0])}</a><br><span class="small muted">${esc(place(o[1], o[2]))} · EIN ${fmtEin(oe)}</span></td><td data-label="Paid" class="r num">${money(amt, true)}</td><td data-label="Purpose">${pp ? esc(pp) : '<span class="muted">—</span>'}</td><td data-label="Match">${matchChip(code, score, margin)}</td></tr>`;
+      return `<tr${more}><td data-label="Recipient"><a href="${N.href("o", oe)}">${esc(o[0])}</a><br><span class="small muted">${esc(place(o[1], o[2]))} · <span class="nowrap">EIN ${fmtEin(oe)}</span></span></td><td data-label="Paid" class="r num">${money(amt, true)}</td><td data-label="Purpose">${pp ? esc(pp) : '<span class="muted">—</span>'}</td><td data-label="Match">${matchChip(code, score, margin)}</td></tr>`;
     }
     const [nm, city, st, amt, purpose, kind] = x.u;
     return `<tr class="unres${more ? " more" : ""}"><td data-label="Recipient">${esc(nm)}<br><span class="small muted">${esc(place(city, st))} · ${kind === "f" ? "outside the US" : "no confident EIN match"}</span></td><td data-label="Paid" class="r num">${money(amt, true)}</td><td data-label="Purpose">${purpose ? esc(purpose) : '<span class="muted">—</span>'}</td><td data-label="Match"><span class="chip chip-none">${kind === "f" ? "Foreign" : "Unmatched"}</span>${kind === "f" ? "" : ` <a href="${pageUrl("corrections")}" class="small">Help match</a>`}</td></tr>`;

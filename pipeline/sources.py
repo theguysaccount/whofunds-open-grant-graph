@@ -87,7 +87,7 @@ def fingerprint():
     bmf = {}
     for i in range(1, 5):
         r = http(BMF.format(i=i), method="HEAD")
-        bmf[f"eo{i}"] = r.headers.get("Last-Modified", "") + "|" + r.headers.get("Content-Length", "")
+        bmf[f"eo{i}"] = r.headers.get("Last-Modified", "")  # Content-Length varies by CDN edge
     return {
         "year": year,
         "pf_index": idx[year][1], "pf_index_size": idx[year][2],

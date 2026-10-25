@@ -13,7 +13,7 @@ WHOFUNDS launches and grows without a human in the loop. Nothing in this file ne
 2. It fingerprints the sources: the data-lake index build, the BMF `Last-Modified` headers and the pipeline code hash. It stops if they match the last release.
 3. If they don't match, it runs download → extract → resolve → build. Then come the tests, including a scan that no individual is in the release, and the guard against the last release.
 4. Only then does it run `gh release create … --latest` and `gh workflow run pages.yml`.
-5. `pages.yml` downloads the latest `site-data.tar.gz`, runs the site tests, builds the static site (`site/scripts/build-pages.mjs`, ~720 MB) and deploys it to Pages. Then it submits the landing pages to IndexNow.
+5. `pages.yml` downloads the latest `site-data.tar.gz`, runs the site tests, builds the static site (`site/scripts/build-pages.mjs`, ~800 MB) and deploys it to Pages. Then it submits the landing pages to IndexNow.
 
 Any failure stops before anything is published, and the site keeps the last good release. GitHub emails the repository owner about failed runs.
 
@@ -38,14 +38,14 @@ The product's distribution is search. Its pages are titled for the searches fund
 What runs automatically:
 - **Sitemaps.** There are 12 gzipped sitemaps with ~461k URLs, every published entity. Landing pages come first.
 - **Structured data.** `WebSite` + `SearchAction` on home, `NGO` with `funder` on org pages, `Organization` on foundation pages, `Dataset` with `DataDownload` on the data page.
-- **IndexNow** (Bing, Yandex, Seznam, Naver). The landing pages go in after every deploy. Then `indexnow.yml` submits the next 10,000 sitemap URLs each day, finishing a full pass in about 46 days per release. The key file is published at the site root.
+- **IndexNow** (Bing, Yandex, Seznam, Naver). The landing pages go in after every deploy. Then `indexnow.yml` submits the next 10,000 sitemap URLs each day, finishing a full pass in about 47 days per release. The key file is published at the site root.
 - **Open data channels.** Each release is a GitHub release with CSV assets and notes, so its download counts are a public, machine-readable usage signal.
 
 ## 4. The first 14 days (automatic)
 
 | Day | What the automation does | What to look at (optional) |
 |---|---|---|
-| 0 | Data release published, site deployed, ~9.7k landing pages submitted to IndexNow | Actions tab all green |
+| 0 | Data release published, site deployed, the first 10,000 landing pages submitted to IndexNow | Actions tab all green |
 | 1–14 | `indexnow.yml` submits 10,000 more URLs per day (140k by day 14) | Bing results for `site:theguysaccount.github.io/whofunds-open-grant-graph` |
 | 7, 14 | `refresh.yml` checks the sources; it rebuilds only if the IRS or the data lake changed | New release appears, or "nothing to do" |
 | any | Visitors file corrections as `correction` issues | The issues list |

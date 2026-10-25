@@ -1,0 +1,85 @@
+# Build the static site from the latest data release and deploy it to GitHub Pages.
+# Runs on site changes, after a data refresh (refresh.yml dispatches it), or by hand.
+name: Deploy site
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ["site/**", ".github/workflows/pages.yml"]
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+env:
+  WHOFUNDS_BASE_URL: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}
+  WHOFUNDS_REPO: ${{ github.repository }}
+  WHOFUNDS_SUPPORT_URL: ${{ vars.WHOFUNDS_SUPPORT_URL }}   # optional: alerts signup or donation link
+  WHOFUNDS_GOATCOUNTER: ${{ vars.WHOFUNDS_GOATCOUNTER }}   # optional: https://<code>.goatcounter.com/count
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Fetch the latest data release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p site/data /tmp/release
+          gh release download --repo "$GITHUB_REPOSITORY" --pattern "site-data.tar.gz" --dir /tmp/release
+          tar -xzf /tmp/release/site-data.tar.gz -C site/data
+          ls site/data
+      - name: Install and test
+        working-directory: site
+        run: |
+          npm ci --no-audit --no-fund
+          npm test
+      - name: Open Graph image
+        working-directory: site
+        run: CHROME="$(command -v google-chrome || command -v chromium-browser)" node scripts/og.mjs
+      - name: Build static site
+        working-directory: site
+        run: node --max-old-space-size=12288 scripts/build-pages.mjs
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site/dist
+      - uses: actions/upload-artifact@v4
+        with:
+          name: urls
+          path: site/dist-urls.txt
+          retention-days: 7
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
+
+  indexnow:
+    needs: deploy
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - uses: actions/download-artifact@v4
+        with:
+          name: urls
+      - name: Submit landing pages to IndexNow
+        run: node site/scripts/indexnow.mjs --file dist-urls.txt || true

@@ -10,7 +10,7 @@ import crypto from "node:crypto";
 const SITE_DIR = path.resolve(path.dirname(new URL(import.meta.url).pathname), "..");
 const SRC_PUB = path.join(SITE_DIR, "public");
 const PUB = process.env.WHOFUNDS_OUT ? path.resolve(process.env.WHOFUNDS_OUT) : SRC_PUB;
-const DATA = path.join(SITE_DIR, "data");
+const DATA = path.resolve(process.env.WHOFUNDS_DATA_DIR || path.join(SITE_DIR, "data"));
 process.chdir(SITE_DIR);
 // Asset version = hash of the CSS + JS, written before any page renders so every page
 // (static and server-rendered) references the same cache-busting query.

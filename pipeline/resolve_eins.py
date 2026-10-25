@@ -501,6 +501,11 @@ def resolve_one(name, z, key, po, city, state):
     present = {s[3]: s for s in ranked}
     ranked = [s for s in ranked
               if not (orgs[s[3]].dom in present and present[orgs[s[3]].dom][0] >= s[0] - 0.02)]
+    # A curated alias target also stands for near-identically named entities under 1% of its
+    # revenue ("Trustees of Princeton University" the alumni-class entity vs the university).
+    alias_rev = max((orgs[s[3]].rev for s in ranked if s[2] == "ALIAS"), default=0)
+    if alias_rev:
+        ranked = [s for s in ranked if s[2] == "ALIAS" or not (s[1] >= 0.95 and orgs[s[3]].rev * 100 < alias_rev)]
     top = ranked[0]
     final, sim, strat, i, src = top
     run = ranked[1] if len(ranked) > 1 else None

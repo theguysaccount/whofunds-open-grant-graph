@@ -1,0 +1,23 @@
+# Daily: submit the next 10,000 sitemap URLs to IndexNow (one pass per data release).
+name: IndexNow
+
+on:
+  schedule:
+    - cron: "41 9 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  submit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      WHOFUNDS_BASE_URL: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: node site/scripts/indexnow.mjs --sitemap "$WHOFUNDS_BASE_URL/sitemap.xml" || true

@@ -320,7 +320,7 @@
       "Correct organization or EIN, if you know it:", "", "Evidence or note:", "",
       "Please don't include personal contact details; this issue is public."].join("\n");
     track("correction_open", { ein: orgEin });
-    window.open("https://github.com/" + md.repo + "/issues/new?labels=correction&title=" + encodeURIComponent(title) + "&body=" + encodeURIComponent(body), "_blank", "noopener");
+    window.open("https://github.com/" + md.repo + "/issues/new?template=correction.md&labels=correction&title=" + encodeURIComponent(title) + "&body=" + encodeURIComponent(body), "_blank", "noopener");
   });
 
   // ---------------------------------------------------------------- corrections page
@@ -346,7 +346,7 @@
         var t = (vote === "same" ? "Same organization: " : "Different organization: ") + x.name + " (" + x.state + ") vs EIN " + fmtEin(x.near_ein);
         var body = "Filed payee: " + x.name + " (" + x.state + "), " + x.rows + " grant lines\nNearest IRS record: " + x.near_name + ", EIN " + fmtEin(x.near_ein) +
           "\nhttps://projects.propublica.org/nonprofits/organizations/" + x.near_ein + "\n\nVote: " + vote + "\n\nEvidence (optional):\n";
-        return "https://github.com/" + md.repo + "/issues/new?labels=correction&title=" + encodeURIComponent(t) + "&body=" + encodeURIComponent(body);
+        return "https://github.com/" + md.repo + "/issues/new?template=correction.md&labels=correction&title=" + encodeURIComponent(t) + "&body=" + encodeURIComponent(body);
       }
       fixit.innerHTML = pick.map(function (x, i) {
         var actions = STATIC

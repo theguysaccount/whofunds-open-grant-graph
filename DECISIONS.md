@@ -80,11 +80,11 @@ In server mode, corrections and alert signups go to a private Vercel Blob store 
 
 ### D18. Production hosting: GitHub Pages, fully machine-driven
 The requirement is a site that runs and grows with no human in the loop and no spending. GitHub Pages plus Actions does that: free hosting, scheduled builds with the built-in token, and no third-party credentials to hold. The catch is the 1 GB site limit, while full HTML for all 512k entities is ~7.5 GB. So the site is layered:
-- **static landing pages** for the highest-value foundations (by matched recipients) and organizations (by funders), filled to a byte budget, with lists capped at 25–50 rows;
+- **static landing pages** for the highest-value foundations (by matched recipients) and organizations (by funders), filled to a byte budget, with lists capped at 20–50 rows;
 - **gzipped JSON shards** for every entity, with names embedded, rendered in the browser by the same templates (`site/lib/core.js` is isomorphic);
 - **client-side search** over gzipped 3-letter-prefix shards.
 
-The total is ~720 MB. Landing pages' "Show all" loads the full record from the shard.
+The total is ~800 MB, with ~17k static pages (7.4k foundations, 10k organizations). Landing pages' "Show all" loads the full record from the shard.
 *Trade-off:* long-tail pages are client-rendered (`org/?ein=`), which search engines index more slowly than HTML.
 
 ### D19. Refresh weekly, rebuild only on change, fail safe

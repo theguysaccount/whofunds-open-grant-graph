@@ -17,11 +17,11 @@ import { execFileSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 
 const SITE_DIR = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-const DATA = path.join(SITE_DIR, "data");
+const DATA = path.resolve(process.env.WHOFUNDS_DATA_DIR || path.join(SITE_DIR, "data"));
 const OUT = path.resolve(process.env.WHOFUNDS_OUT || path.join(SITE_DIR, "dist"));
-const BUDGET_ORG = Number(process.env.WHOFUNDS_BUDGET_ORG_MB || 250) * 1e6;
-const BUDGET_FDN = Number(process.env.WHOFUNDS_BUDGET_FDN_MB || 200) * 1e6;
-const ORG_ROWS = 25;   // funder rows rendered into a static org page ("Show all" loads the rest)
+const BUDGET_ORG = Number(process.env.WHOFUNDS_BUDGET_ORG_MB || 300) * 1e6;
+const BUDGET_FDN = Number(process.env.WHOFUNDS_BUDGET_FDN_MB || 230) * 1e6;
+const ORG_ROWS = 20;   // funder rows rendered into a static org page ("Show all" loads the rest)
 const FDN_ROWS = 50;   // grant rows rendered into a static foundation page
 process.env.WHOFUNDS_MODE = "static";
 if (!process.env.WHOFUNDS_BASE_URL) throw new Error("WHOFUNDS_BASE_URL is required (e.g. https://user.github.io/repo)");
@@ -204,7 +204,7 @@ if (!fs.existsSync(keyFile)) fs.writeFileSync(keyFile, crypto.randomBytes(16).to
 const key = fs.readFileSync(keyFile, "utf8").trim();
 fs.writeFileSync(path.join(OUT, `${key}.txt`), key);
 // The deploy workflow submits these to IndexNow (static landing pages first).
-fs.writeFileSync(path.join(SITE_DIR, "dist-urls.txt"), urls.join("\n") + "\n");
+fs.writeFileSync(process.env.WHOFUNDS_URLS_OUT || path.join(SITE_DIR, "dist-urls.txt"), urls.join("\n") + "\n");
 log(`sitemaps: ${maps.length} files, ${urls.length} URLs (${staticCount} static); IndexNow key file ${key}.txt`);
 
 // 8. Size report (GitHub Pages limit: 1 GB).
