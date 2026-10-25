@@ -40,9 +40,11 @@ The BMF name can be a parent system's name or a 1764 charter name. The most rece
 
 ### D7. Analytics: Vercel Web Analytics (cookieless) + custom events
 Events are `search`, `funder_open` (the activation event), `share`, `alert_signup`, `correction_submit` and `download`. There's no cookie banner because nothing personal is stored or tracked across sites.
+*On the static site:* the same events go to GoatCounter (cookieless) once `WHOFUNDS_GOATCOUNTER` is set, and they're skipped under Do Not Track or Global Privacy Control.
 
 ### D8. Corrections + alert signups → a private Vercel Blob store via one function
 Corrections show publicly on /corrections without the submitter's e-mail. Alert e-mails are never shown. No e-mail is sent in v1; it's a waitlist that measures demand.
+*Superseded on the static site* by D20 (corrections are public GitHub issues) and D22 (alerts are an external link).
 
 ### D9. Licence: CC0 for data and code
 The brief says CC0 for the graph and the scripts. Keeping one licence avoids confusion for re-users.
@@ -108,3 +110,6 @@ v1 does no social posting and no outreach. Discovery comes from:
 - IndexNow submissions: the landing pages after each deploy, then 10,000 sitemap URLs a day.
 
 robots.txt on a project site sits outside the host root, so crawlers don't read it, which is why IndexNow carries the load. Google ignores IndexNow; it'll find the site through links, or faster through Search Console (needs a human).
+
+### D24. Foundation names: join the e-file's second name line only when it continues the name
+The e-file splits long legal names across two lines ("KENNETH AND CHERRIE GARRETT" / "FOUNDATION"), and showing line 1 alone made 12,659 foundations read like people. Line 2 also carries care-of contacts, trustee banks and a.k.a. names. `foundation_name()` (pipeline/common.py) keeps line 2 only when it continues the name. It drops care-of, trustee, alias and person-like lines, and care-of tails inside line 1 ("X FOUNDATION CO JOHN DOE"). Tests pin each case.
