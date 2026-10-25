@@ -1,0 +1,89 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "cleanUrls": true,
+  "trailingSlash": false,
+  "outputDirectory": "public",
+  "functions": {
+    "api/org.js": {
+      "includeFiles": "data/{org/**,names.json.gz,stats.json,asset-version.txt}",
+      "maxDuration": 15
+    },
+    "api/foundation.js": {
+      "includeFiles": "data/{fdn/**,names.json.gz,stats.json,asset-version.txt}",
+      "maxDuration": 15
+    },
+    "api/search.js": {
+      "includeFiles": "data/{names.json.gz,stats.json,asset-version.txt}",
+      "maxDuration": 15
+    },
+    "api/collect.js": {
+      "maxDuration": 10
+    },
+    "api/corrections.js": {
+      "maxDuration": 15
+    },
+    "api/export.js": {
+      "includeFiles": "data/{org/**,fdn/**,names.json.gz,asset-version.txt}",
+      "maxDuration": 15
+    }
+  },
+  "rewrites": [
+    {
+      "source": "/org/:ein/card.png",
+      "destination": "/api/org?ein=:ein&card=1"
+    },
+    {
+      "source": "/foundation/:ein/card.png",
+      "destination": "/api/foundation?ein=:ein&card=1"
+    },
+    {
+      "source": "/org/:ein",
+      "destination": "/api/org?ein=:ein"
+    },
+    {
+      "source": "/foundation/:ein",
+      "destination": "/api/foundation?ein=:ein"
+    },
+    {
+      "source": "/search",
+      "destination": "/api/search?html=1"
+    }
+  ],
+  "headers": [
+    {
+      "source": "/assets/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=86400, stale-while-revalidate=604800"
+        }
+      ]
+    },
+    {
+      "source": "/downloads/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=3600"
+        }
+      ]
+    },
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "Referrer-Policy",
+          "value": "strict-origin-when-cross-origin"
+        },
+        {
+          "key": "Permissions-Policy",
+          "value": "camera=(), microphone=(), geolocation=()"
+        }
+      ]
+    }
+  ]
+}

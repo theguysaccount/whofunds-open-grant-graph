@@ -1,0 +1,5 @@
+.local-store/
+node_modules/
+.vercel/
+.vercel
+.env*
