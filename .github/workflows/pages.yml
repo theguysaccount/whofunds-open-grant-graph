@@ -1,9 +1,15 @@
-# Build the static site from the latest data release and deploy it to GitHub Pages.
+# Build the static site from a data release (the latest, unless refresh.yml names the one it
+# just published) and deploy it to GitHub Pages.
 # Runs on site changes, after a data refresh (refresh.yml dispatches it), or by hand.
 name: Deploy site
 
 on:
   workflow_dispatch:
+    inputs:
+      tag:
+        description: Data release tag to deploy (empty = the latest release)
+        type: string
+        default: ""
   push:
     branches: [main]
     paths: ["site/**", ".github/workflows/pages.yml"]
@@ -32,13 +38,17 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - name: Fetch the latest data release
+      - name: Fetch the data release
         env:
           GH_TOKEN: ${{ github.token }}
+          TAG: ${{ inputs.tag }}
         run: |
+          # Right after a release is published, "latest" can still name the previous one,
+          # so refresh.yml passes the exact tag. Pushes and manual runs take the latest.
           mkdir -p site/data /tmp/release
-          gh release download --repo "$GITHUB_REPOSITORY" --pattern "site-data.tar.gz" --dir /tmp/release
+          gh release download $TAG --repo "$GITHUB_REPOSITORY" --pattern "site-data.tar.gz" --dir /tmp/release
           tar -xzf /tmp/release/site-data.tar.gz -C site/data
+          echo "data release: ${TAG:-latest}, built $(python3 -c 'import json; print(json.load(open("site/data/stats.json"))["built"])')"
           ls site/data
       - name: Install and test
         working-directory: site

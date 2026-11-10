@@ -19,7 +19,7 @@ The site answers "who funds X?" for organizations and "where did Y's money go?" 
 | What | Where | When |
 |---|---|---|
 | Rebuild the graph from public sources, test it, guard it, publish a data release | `.github/workflows/refresh.yml` | weekly check; rebuilds only when the IRS BMF, the GivingTuesday indexes or this pipeline's code changed |
-| Build the static site from the latest release and deploy it to GitHub Pages | `.github/workflows/pages.yml` | after each release, and on site changes |
+| Build the static site from the new release and deploy it to GitHub Pages | `.github/workflows/pages.yml` | after each release, and on site changes |
 | Tell search engines (IndexNow) about new pages | `pages.yml` (landing pages), `.github/workflows/indexnow.yml` (10,000 URLs a day) | after deploys, daily |
 | Tests (pipeline + site) | `.github/workflows/test.yml` | every push |
 

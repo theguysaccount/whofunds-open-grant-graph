@@ -91,6 +91,7 @@ The total is ~800 MB, with ~17k static pages (7.4k foundations, 10k organization
 
 ### D19. Refresh weekly, rebuild only on change, fail safe
 `refresh.yml` fingerprints the sources: the data-lake index build, the BMF Last-Modified headers and a hash of the pipeline code. If anything changed, it rebuilds on a free runner. The resolver streams rows and runs single-process in ~5 GB. Then it runs every test, including a scan that the release has no individuals, and a guard against the last good release (line, match and foundation counts can't fall sharply). Only after all of that does it publish a release and dispatch the site deploy. Any failure stops before publishing.
+The deploy is dispatched with the new release's tag. On 2026-11-09 it ran one second after publishing, when "latest" still named the 2026-11-02 release, so the site stayed a release behind until the tag was passed explicitly.
 The tax year moves to the newest index at least 90% as complete as the year before it.
 
 ### D20. Corrections are public GitHub issues on the static site
@@ -109,7 +110,7 @@ v1 does no social posting and no outreach. Discovery comes from:
 - JSON-LD on every page (WebSite with SearchAction, NGO/Organization with funders, Dataset);
 - IndexNow submissions: the landing pages after each deploy, then 10,000 sitemap URLs a day.
 
-robots.txt on a project site sits outside the host root, so crawlers don't read it, which is why IndexNow carries the load. Google ignores IndexNow; it'll find the site through links, or faster through Search Console (needs a human).
+robots.txt on a project site sits outside the host root, so crawlers don't read it. Since 2026-10-25 the account's user site (`theguysaccount.github.io`, its own repo and daily workflow) has served a host-root robots.txt that lists every project's sitemap, this one included. Google ignores IndexNow, but it can now find the sitemap without Search Console, which still needs a human and would be faster.
 
 ### D24. Foundation names: join the e-file's second name line only when it continues the name
 The e-file splits long legal names across two lines ("KENNETH AND CHERRIE GARRETT" / "FOUNDATION"), and showing line 1 alone made 12,659 foundations read like people. Line 2 also carries care-of contacts, trustee banks and a.k.a. names. `foundation_name()` (pipeline/common.py) keeps line 2 only when it continues the name. It drops care-of, trustee, alias and person-like lines, and care-of tails inside line 1 ("X FOUNDATION CO JOHN DOE"). Tests pin each case.

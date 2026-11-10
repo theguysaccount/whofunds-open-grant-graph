@@ -12,8 +12,8 @@ WHOFUNDS launches and grows without a human in the loop. Nothing in this file ne
 1. `refresh.yml` runs every Monday at 07:23 UTC, or by hand from the Actions tab with "force".
 2. It fingerprints the sources: the data-lake index build, the BMF `Last-Modified` headers and the pipeline code hash. It stops if they match the last release.
 3. If they don't match, it runs download → extract → resolve → build. Then come the tests, including a scan that no individual is in the release, and the guard against the last release.
-4. Only then does it run `gh release create … --latest` and `gh workflow run pages.yml`.
-5. `pages.yml` downloads the latest `site-data.tar.gz`, runs the site tests, builds the static site (`site/scripts/build-pages.mjs`, ~800 MB) and deploys it to Pages. Then it submits the landing pages to IndexNow.
+4. Only then does it run `gh release create … --latest` and dispatch `pages.yml` with that release's tag. It passes the tag because, right after a release, "latest" can still name the previous one.
+5. `pages.yml` downloads that release's `site-data.tar.gz` (or the latest, when a push or a person starts it). It runs the site tests, builds the static site (`site/scripts/build-pages.mjs`, ~800 MB) and deploys it to Pages. Then it submits the landing pages to IndexNow.
 
 Any failure stops before anything is published, and the site keeps the last good release. GitHub emails the repository owner about failed runs.
 
@@ -37,6 +37,7 @@ The product's distribution is search. Its pages are titled for the searches fund
 
 What runs automatically:
 - **Sitemaps.** There are 12 gzipped sitemaps with ~461k URLs, every published entity. Landing pages come first.
+- **Root robots.txt.** Crawlers read robots.txt only at the host root. The account's user site (`theguysaccount.github.io`, a separate repo) rebuilds that file daily with a `Sitemap:` line for every project site, this one included.
 - **Structured data.** `WebSite` + `SearchAction` on home, `NGO` with `funder` on org pages, `Organization` on foundation pages, `Dataset` with `DataDownload` on the data page.
 - **IndexNow** (Bing, Yandex, Seznam, Naver). The landing pages go in after every deploy. Then `indexnow.yml` submits the next 10,000 sitemap URLs each day. The rotation follows the calendar, not the release, so it reaches every URL about every 47 days. The key file is published at the site root.
 - **Open data channels.** Each release is a GitHub release with CSV assets and notes, so its download counts are a public, machine-readable usage signal.
@@ -60,8 +61,8 @@ Signals of use that need no analytics account:
 
 | Step | Why | How |
 |---|---|---|
-| Custom domain | A shorter URL with its own robots.txt and better trust signals | Pages → Custom domain, then DNS. For an apex domain: A `185.199.108.153`, `185.199.109.153`, `185.199.110.153`, `185.199.111.153` and AAAA `2606:50c0:8000::153`, `2606:50c0:8001::153`, `2606:50c0:8002::153`, `2606:50c0:8003::153`. For `www`: CNAME `theguysaccount.github.io`. Then set repository variable `WHOFUNDS_BASE_URL=https://<domain>` and re-run `pages.yml`. |
-| Google Search Console | Google ignores IndexNow, and submitting the sitemap is faster than waiting for links | Verify the domain (needs a Google account), then submit `sitemap.xml` |
+| Custom domain | A shorter URL and better trust signals | Pages → Custom domain, then DNS. For an apex domain: A `185.199.108.153`, `185.199.109.153`, `185.199.110.153`, `185.199.111.153` and AAAA `2606:50c0:8000::153`, `2606:50c0:8001::153`, `2606:50c0:8002::153`, `2606:50c0:8003::153`. For `www`: CNAME `theguysaccount.github.io`. Then set repository variable `WHOFUNDS_BASE_URL=https://<domain>` and re-run `pages.yml`. |
+| Google Search Console | Google ignores IndexNow. It can find the sitemap through the root robots.txt, but Search Console is faster and shows index coverage. | Verify the domain (needs a Google account), then submit `sitemap.xml` |
 | `WHOFUNDS_SUPPORT_URL` | The monetization slot: an alerts signup, payment link or donation page | Repository variable. Re-run `pages.yml`. |
 | `WHOFUNDS_GOATCOUNTER` | Cookieless analytics, including the `funder_open` activation event | Create a GoatCounter site, set the repository variable to `https://<code>.goatcounter.com/count`. |
 | Review corrections | Accepted corrections should become aliases or fixes in `pipeline/aliases.csv` | Label an issue `accepted`, then edit the alias table. The next refresh picks it up, since code changes trigger a rebuild. |
